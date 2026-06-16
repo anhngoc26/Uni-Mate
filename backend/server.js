@@ -138,25 +138,104 @@ app.delete("/api/truong/:id", (req, res) => {
 
     const id = req.params.id;
 
-    const sql = `
-        DELETE FROM truong_dh
+    const deleteMajorsSql = `
+        DELETE FROM nganh_hoc
         WHERE id_truong = ?
     `;
 
-    db.query(sql, [id], (err, result) => {
+    db.query(deleteMajorsSql, [id], (err) => {
 
         if (err) {
             console.error(err);
 
             return res.status(500).json({
-                message: "Loi xoa truong"
+                message: "Loi xoa nganh hoc"
             });
         }
 
-        res.json({
-            message: "Xoa truong thanh cong"
+        const deleteSchoolSql = `
+            DELETE FROM truong_dh
+            WHERE id_truong = ?
+        `;
+
+        db.query(deleteSchoolSql, [id], (err) => {
+
+            if (err) {
+                console.error(err);
+
+                return res.status(500).json({
+                    message: "Loi xoa truong"
+                });
+            }
+
+            res.json({
+                message: "Xoa truong thanh cong"
+            });
         });
     });
+});
+
+app.post("/api/truong", (req, res) => {
+
+    const {
+        ma_truong,
+        ten_truong,
+        dia_chi,
+        loai_hinh,
+        khoi_nganh,
+        thu_hang,
+        trong_diem,
+        khu_vuc,
+        website,
+        image_url
+    } = req.body;
+
+    const sql = `
+        INSERT INTO truong_dh (
+            ma_truong,
+            ten_truong,
+            dia_chi,
+            loai_hinh,
+            khoi_nganh,
+            thu_hang,
+            trong_diem,
+            khu_vuc,
+            website,
+            image_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+        sql,
+        [
+            ma_truong,
+            ten_truong,
+            dia_chi,
+            loai_hinh,
+            khoi_nganh,
+            thu_hang,
+            trong_diem,
+            khu_vuc,
+            website,
+            image_url
+        ],
+        (err, result) => {
+
+            if (err) {
+                console.error(err);
+
+                return res.status(500).json({
+                    message: "Loi them truong"
+                });
+            }
+
+            res.json({
+                message: "Them truong thanh cong",
+                id: result.insertId
+            });
+        }
+    );
 });
 
 app.get("/api/truong/:id/nganh", (req, res) => {
@@ -200,30 +279,39 @@ app.get("/api/truong/:id/nganh", (req, res) => {
 app.post("/api/nganh", (req, res) => {
 
     const {
+    id_truong,
+    ten_nganh,
+    ma_nganh,
+    he_dao_tao,
+    to_hop,
+    nam,
+    diem_chuan,
+    hoc_phi,
+    chi_tieu,
+    phuong_thuc,
+    thang_diem,
+    ty_le_viec_lam,
+    luong_trung_binh
+} = req.body;
+
+   const sql = `
+    INSERT INTO nganh_hoc (
         id_truong,
         ten_nganh,
         ma_nganh,
         he_dao_tao,
         to_hop,
+        nam,
         diem_chuan,
         hoc_phi,
-        chi_tieu
-    } = req.body;
-
-    const sql = `
-        INSERT INTO nganh_hoc (
-            id_truong,
-            ten_nganh,
-            ma_nganh,
-            he_dao_tao,
-            to_hop,
-            diem_chuan,
-            hoc_phi,
-            chi_tieu
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
+        chi_tieu,
+        phuong_thuc,
+        thang_diem,
+        ty_le_viec_lam,
+        luong_trung_binh
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
     db.query(
         sql,
         [
@@ -232,9 +320,14 @@ app.post("/api/nganh", (req, res) => {
             ma_nganh,
             he_dao_tao,
             to_hop,
+            nam,
             diem_chuan,
             hoc_phi,
-            chi_tieu
+            chi_tieu,
+            phuong_thuc,
+            thang_diem,
+            ty_le_viec_lam,
+            luong_trung_binh
         ],
         (err, result) => {
 
@@ -263,36 +356,51 @@ app.put("/api/nganh/:id", (req, res) => {
     ma_nganh,
     he_dao_tao = "Đại học chính quy",
     to_hop,
+    nam,
     diem_chuan,
     hoc_phi,
-    chi_tieu
+    chi_tieu,
+    phuong_thuc,
+    thang_diem,
+    ty_le_viec_lam,
+    luong_trung_binh
 } = req.body;
 
     const sql = `
-        UPDATE nganh_hoc
-        SET
-            ten_nganh = ?,
-            ma_nganh = ?,
-            he_dao_tao = ?,
-            to_hop = ?,
-            diem_chuan = ?,
-            hoc_phi = ?,
-            chi_tieu = ?
-        WHERE id_nganh = ?
-    `;
+    UPDATE nganh_hoc
+    SET
+        ten_nganh = ?,
+        ma_nganh = ?,
+        he_dao_tao = ?,
+        to_hop = ?,
+        nam = ?,
+        diem_chuan = ?,
+        hoc_phi = ?,
+        chi_tieu = ?,
+        phuong_thuc = ?,
+        thang_diem = ?,
+        ty_le_viec_lam = ?,
+        luong_trung_binh = ?
+    WHERE id_nganh = ?
+`;
 
     db.query(
         sql,
         [
-            ten_nganh,
-            ma_nganh,
-            he_dao_tao,
-            to_hop,
-            diem_chuan,
-            hoc_phi,
-            chi_tieu,
-            id
-        ],
+        ten_nganh,
+        ma_nganh,
+        he_dao_tao,
+        to_hop,
+        nam,
+        diem_chuan,
+        hoc_phi,
+        chi_tieu,
+        phuong_thuc,
+        thang_diem,
+        ty_le_viec_lam,
+        luong_trung_binh,
+        id
+    ],
         (err) => {
 
             if (err) {

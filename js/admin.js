@@ -7,6 +7,7 @@
    QUẢN LÝ TRƯỜNG ĐẠI HỌC
    ============================================================ */
 
+let editingMajorIndex = null;
 function renderAdminSchools(query = '') {
   const q    = query.toLowerCase();
   const list = schools.filter(s =>
@@ -101,7 +102,15 @@ function renderMajors() {
              oninput="tempMajors[${i}].combo=this.value">
       <input type="number" value="${m.score}" placeholder="Điểm" step="0.1"
              oninput="tempMajors[${i}].score=parseFloat(this.value)||0">
-      <button class="btn-del-major" onclick="deleteMajor(${i})">🗑️</button>
+      <button class="btn-edit-major"
+        onclick="editMajor(${i})">
+  ✏️
+</button>
+
+<button class="btn-del-major"
+        onclick="deleteMajor(${i})">
+  🗑️
+</button>
     </div>`).join('');
 }
 
@@ -110,119 +119,379 @@ function addMajorRow() {
   renderMajors();
 }
 
-function deleteMajor(i) {
-  tempMajors.splice(i, 1);
-  renderMajors();
-}
+async function deleteMajor(i) {
 
-/* --- Lưu trường (thêm mới hoặc cập nhật) --- */
-function saveSchool() {
-  const name = document.getElementById('ms-name').value.trim();
-  const code = document.getElementById('ms-code').value.trim();
+  const major = tempMajors[i];
 
-  if (!name || !code) {
-    showToast('Vui lòng nhập tên và mã trường!', 'error');
+  if (!confirm(`Xóa ngành "${major.name}"?`)) {
     return;
   }
 
-  const data = {
-    name,
-    code,
-    type: document.getElementById('ms-type').value,
-    city: document.getElementById('ms-city').value,
-    region: document.getElementById('ms-region').value,
-    rank: parseInt(document.getElementById('ms-rank').value) || 99,
-    feeMin: parseInt(document.getElementById('ms-fee-min').value) || 0,
-    feeMax: parseInt(document.getElementById('ms-fee-max').value) || 0,
-    desc: document.getElementById('ms-desc').value,
-    img: document.getElementById('ms-img').value,
-    web: document.getElementById('ms-web').value,
-    majors: tempMajors,
-  };
+  try {
 
-  if (editingSchoolId) {
+    if (major.id_nganh) {
 
-    fetch(
-      `http://localhost:5000/api/truong/${editingSchoolId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          ma_truong: data.code,
-          ten_truong: data.name,
-          dia_chi: data.city,
-          loai_hinh: data.type,
-          khoi_nganh: "",
-          thu_hang: data.rank,
-          trong_diem: 0,
-          khu_vuc: data.region,
-
-          website: data.web,
-          image_url: data.img,
-          majors: data.majors
-        })
-      }
-    )
-    .then(res => res.json())
-    .then(async () => {
-
-      // ==========================
-      // CẬP NHẬT NGÀNH HỌC
-      // ==========================
-      for (const m of tempMajors) {
-
-        if (!m.id_nganh) continue;
-
-        await fetch(
-          `http://localhost:5000/api/nganh/${m.id_nganh}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              ten_nganh: m.name,
-              ma_nganh: m.code,
-              he_dao_tao: "Đại học chính quy",
-              to_hop: m.combo,
-              diem_chuan: m.score,
-              hoc_phi: m.hoc_phi || 0,
-              chi_tieu: m.chi_tieu || 0
-            })
-          }
-        );
-      }
-
-      await loadSchools();
-
-      renderAdminSchools();
-      renderSearchResults();
-
-      closeModal('modal-school');
-
-      showToast(
-        'Đã cập nhật trường!',
-        'success'
+      await fetch(
+        `http://localhost:5000/api/nganh/${major.id_nganh}`,
+        {
+          method: "DELETE"
+        }
       );
-    })
-    .catch(err => {
-      console.error(err);
+    }
 
-      showToast(
-        'Lỗi cập nhật trường',
-        'error'
-      );
-    });
+    tempMajors.splice(i, 1);
 
-  } else {
+    renderMajors();
 
     showToast(
-      'Chưa làm chức năng thêm trường vào MySQL',
+      'Đã xóa ngành!',
+      'success'
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      'Lỗi xóa ngành',
       'error'
     );
   }
+}
+function editMajor(i) {
+
+    const m = tempMajors[i];
+
+    editingMajorIndex = i;
+
+    document.getElementById("major-name").value =
+        m.name || "";
+
+    document.getElementById("major-code").value =
+        m.code || "";
+
+    document.getElementById("major-hedao").value =
+        m.he_dao_tao || "Đại học chính quy";
+
+    document.getElementById("major-year").value =
+        m.nam || 2025;
+
+    document.getElementById("major-combo").value =
+        m.combo || "";
+
+    document.getElementById("major-score").value =
+        m.score || 0;
+
+    document.getElementById("major-fee").value =
+        m.hoc_phi || 0;
+
+    document.getElementById("major-quota").value =
+        m.chi_tieu || 0;
+
+    document.getElementById("major-method").value =
+        m.phuong_thuc || "Thi THPT";
+
+    document.getElementById("major-scale").value =
+        m.thang_diem || 30;
+
+    document.getElementById("major-jobrate").value =
+        m.ty_le_viec_lam || 0;
+
+    document.getElementById("major-salary").value =
+        m.luong_trung_binh || 0;
+
+    document
+        .getElementById("modal-major")
+        .classList.add("open");
+}
+/* --- Lưu trường (thêm mới hoặc cập nhật) --- */
+function saveSchool() {
+
+    const name = document.getElementById('ms-name').value.trim();
+    const code = document.getElementById('ms-code').value.trim();
+
+    if (!name || !code) {
+        showToast('Vui lòng nhập tên và mã trường!', 'error');
+        return;
+    }
+
+    const data = {
+        name,
+        code,
+        type: document.getElementById('ms-type').value,
+        city: document.getElementById('ms-city').value,
+        region: document.getElementById('ms-region').value,
+        rank: parseInt(document.getElementById('ms-rank').value) || 99,
+        feeMin: parseInt(document.getElementById('ms-fee-min').value) || 0,
+        feeMax: parseInt(document.getElementById('ms-fee-max').value) || 0,
+        desc: document.getElementById('ms-desc').value,
+        img: document.getElementById('ms-img').value,
+        web: document.getElementById('ms-web').value,
+        majors: tempMajors
+    };
+
+    // =========================
+    // CẬP NHẬT TRƯỜNG
+    // =========================
+    if (editingSchoolId) {
+
+        fetch(
+            `http://localhost:5000/api/truong/${editingSchoolId}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ma_truong: data.code,
+                    ten_truong: data.name,
+                    dia_chi: data.city,
+                    loai_hinh: data.type,
+                    khoi_nganh: "",
+                    thu_hang: data.rank,
+                    trong_diem: 0,
+                    khu_vuc: data.region,
+                    website: data.web,
+                    image_url: data.img
+                })
+            }
+        )
+        .then(async () => {
+
+          // Cập nhật hoặc thêm ngành
+
+for (const major of data.majors) {
+
+    if (major.id_nganh) {
+
+        // Ngành đã tồn tại -> UPDATE
+
+        await fetch(
+            `http://localhost:5000/api/nganh/${major.id_nganh}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+
+                    ten_nganh: major.name,
+                    ma_nganh: major.code,
+
+                    he_dao_tao:
+                        major.he_dao_tao || "Đại học chính quy",
+
+                    to_hop:
+                        major.combo,
+
+                    diem_chuan:
+                        major.score,
+
+                    hoc_phi:
+                        major.hoc_phi || 0,
+
+                    chi_tieu:
+                        major.chi_tieu || 0,
+
+                    nam:
+                        major.nam || 2025,
+
+                    phuong_thuc:
+                        major.phuong_thuc || "Thi THPT",
+
+                    thang_diem:
+                        major.thang_diem || 30,
+
+                    ty_le_viec_lam:
+                        major.ty_le_viec_lam || 0,
+
+                    luong_trung_binh:
+                        major.luong_trung_binh || 0
+                })
+            }
+        );
+
+    } else {
+
+        // Ngành mới -> INSERT
+
+        await fetch(
+            "http://localhost:5000/api/nganh",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+
+                    id_truong: editingSchoolId,
+
+                    ten_nganh: major.name,
+                    ma_nganh: major.code,
+
+                    he_dao_tao:
+                        major.he_dao_tao || "Đại học chính quy",
+
+                    to_hop:
+                        major.combo,
+
+                    diem_chuan:
+                        major.score,
+
+                    hoc_phi:
+                        major.hoc_phi || 0,
+
+                    chi_tieu:
+                        major.chi_tieu || 0,
+
+                    nam:
+                        major.nam || 2025,
+
+                    phuong_thuc:
+                        major.phuong_thuc || "Thi THPT",
+
+                    thang_diem:
+                        major.thang_diem || 30,
+
+                    ty_le_viec_lam:
+                        major.ty_le_viec_lam || 0,
+
+                    luong_trung_binh:
+                        major.luong_trung_binh || 0
+                })
+            }
+        );
+    }
+}
+
+            await loadSchools();
+
+            renderAdminSchools();
+            renderSearchResults();
+
+            closeModal('modal-school');
+
+            showToast(
+                'Đã cập nhật trường!',
+                'success'
+            );
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            showToast(
+                'Lỗi cập nhật trường',
+                'error'
+            );
+        });
+
+    }
+
+    // =========================
+    // THÊM TRƯỜNG MỚI
+    // =========================
+    else {
+
+        fetch(
+            "http://localhost:5000/api/truong",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ma_truong: data.code,
+                    ten_truong: data.name,
+                    dia_chi: data.city,
+                    loai_hinh: data.type,
+                    khoi_nganh: "",
+                    thu_hang: data.rank,
+                    trong_diem: 0,
+                    khu_vuc: data.region,
+                    website: data.web,
+                    image_url: data.img
+                })
+            }
+        )
+        .then(res => res.json())
+        .then(async (result) => {
+
+            console.log("ID trường mới =", result.id);
+            console.log("Ngành =", data.majors);
+
+            for (const major of data.majors) {
+
+                await fetch(
+                    "http://localhost:5000/api/nganh",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+
+                            id_truong: result.id,
+
+                            ten_nganh: major.name,
+                            ma_nganh: major.code,
+
+                            he_dao_tao:
+                                major.he_dao_tao || "Đại học chính quy",
+
+                            to_hop:
+                                major.combo,
+
+                            nam:
+                                major.nam || 2025,
+
+                            diem_chuan:
+                                major.score,
+
+                            hoc_phi:
+                                major.hoc_phi || 0,
+
+                            chi_tieu:
+                                major.chi_tieu || 0,
+
+                            phuong_thuc:
+                                major.phuong_thuc || "Thi THPT",
+
+                            thang_diem:
+                                major.thang_diem || 30,
+
+                            ty_le_viec_lam:
+                                major.ty_le_viec_lam || 0,
+
+                            luong_trung_binh:
+                                major.luong_trung_binh || 0
+                        })
+                    }
+                );
+            }
+
+            await loadSchools();
+
+            renderAdminSchools();
+            renderSearchResults();
+
+            closeModal('modal-school');
+
+            showToast(
+                'Đã thêm trường thành công!',
+                'success'
+            );
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            showToast(
+                'Lỗi thêm trường',
+                'error'
+            );
+        });
+    }
 }
 
 /* --- Xóa trường --- */
@@ -268,6 +537,115 @@ async function deleteSchool(id) {
       "error"
     );
   }
+}
+
+function openMajorModal() {
+    editingMajorIndex = null;
+
+    document.getElementById("major-name").value = "";
+    document.getElementById("major-code").value = "";
+
+    document.getElementById("major-hedao").value =
+        "Đại học chính quy";
+
+    document.getElementById("major-year").value =
+        2025;
+
+    document.getElementById("major-combo").value = "";
+
+    document.getElementById("major-score").value = "";
+
+    document.getElementById("major-fee").value = "";
+
+    document.getElementById("major-quota").value = "";
+
+    document.getElementById("major-method").value =
+        "Thi THPT";
+
+    document.getElementById("major-scale").value =
+        30;
+
+    document.getElementById("major-jobrate").value = "";
+
+    document.getElementById("major-salary").value = "";
+
+    document
+        .getElementById("modal-major")
+        .classList.add("open");
+}
+
+function saveMajor() {
+
+    const majorData = {
+
+        name:
+            document.getElementById("major-name").value,
+
+        code:
+            document.getElementById("major-code").value,
+
+        combo:
+            document.getElementById("major-combo").value,
+
+        score:
+            parseFloat(
+                document.getElementById("major-score").value
+            ) || 0,
+
+        he_dao_tao:
+            document.getElementById("major-hedao").value,
+
+        nam:
+            parseInt(
+                document.getElementById("major-year").value
+            ) || 2025,
+
+        hoc_phi:
+            parseInt(
+                document.getElementById("major-fee").value
+            ) || 0,
+
+        chi_tieu:
+            parseInt(
+                document.getElementById("major-quota").value
+            ) || 0,
+
+        phuong_thuc:
+            document.getElementById("major-method").value,
+
+        thang_diem:
+            parseInt(
+                document.getElementById("major-scale").value
+            ) || 30,
+
+        ty_le_viec_lam:
+            parseFloat(
+                document.getElementById("major-jobrate").value
+            ) || 0,
+
+        luong_trung_binh:
+            parseInt(
+                document.getElementById("major-salary").value
+            ) || 0
+    };
+
+    if (editingMajorIndex !== null) {
+
+        tempMajors[editingMajorIndex] = {
+            ...tempMajors[editingMajorIndex],
+            ...majorData
+        };
+
+    } else {
+
+        tempMajors.push(majorData);
+    }
+
+    renderMajors();
+
+    editingMajorIndex = null;
+
+    closeModal("modal-major");
 }
 
 /* ============================================================

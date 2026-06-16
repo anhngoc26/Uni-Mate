@@ -177,8 +177,19 @@
           <p style="font-size:0.85rem; color:var(--primary); font-weight:600; margin-bottom:4px;">🤖 Phân tích AI</p>
           <p style="font-size:0.875rem; color:#374151;">
             Dựa trên điểm thi của bạn, hệ thống gợi ý các trường phù hợp.
-            Điểm trung bình tổ hợp A00 của bạn là <strong id="avg-score">0</strong> điểm.
+            Điểm tổ hợp
+          <strong id="selected-block">A00</strong>
+          của bạn là
+          <strong id="avg-score">0</strong> điểm.
           </p>
+          <div
+        id="suggest-ai-comment"
+        style="
+          margin-top:12px;
+          font-weight:600;
+          color:#4f46e5;
+        ">
+      </div>
         </div>
         <div id="suggest-list" class="schools-grid" style="margin-top:20px;"></div>
       </div>
@@ -497,13 +508,100 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <span style="font-weight:700;" id="major-count-label">Ngành đào tạo (0)</span>
       <button class="btn-outline" style="padding:6px 14px; font-size:0.82rem;"
-              onclick="addMajorRow()">+ Thêm ngành</button>
+              onclick="openMajorModal()">+ Thêm ngành</button>
     </div>
     <div id="majors-list"></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modal-school')">Hủy</button>
       <button class="btn-save"   onclick="saveSchool()">Lưu</button>
     </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-major">
+  <div class="modal" style="max-width:700px;">
+
+    <div class="modal-header">
+      <span class="modal-title">Thêm ngành học</span>
+      <button class="modal-close"
+              onclick="closeModal('modal-major')">✕</button>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>Tên ngành</label>
+        <input id="major-name">
+      </div>
+
+      <div class="form-group">
+        <label>Mã ngành</label>
+        <input id="major-code">
+      </div>
+
+      <div class="form-group">
+        <label>Hệ đào tạo</label>
+        <input id="major-hedao">
+      </div>
+
+      <div class="form-group">
+        <label>Năm</label>
+        <input id="major-year" type="number" value="2025">
+      </div>
+
+      <div class="form-group">
+        <label>Tổ hợp</label>
+        <input id="major-combo">
+      </div>
+
+      <div class="form-group">
+        <label>Điểm chuẩn</label>
+        <input id="major-score" type="number" step="0.01">
+      </div>
+
+      <div class="form-group">
+        <label>Học phí</label>
+        <input id="major-fee" type="number">
+      </div>
+
+      <div class="form-group">
+        <label>Chỉ tiêu</label>
+        <input id="major-quota" type="number">
+      </div>
+
+      <div class="form-group">
+        <label>Phương thức</label>
+        <input id="major-method" value="Thi THPT">
+      </div>
+
+      <div class="form-group">
+        <label>Thang điểm</label>
+        <input id="major-scale" type="number" value="30">
+      </div>
+
+      <div class="form-group">
+        <label>Tỷ lệ việc làm (%)</label>
+        <input id="major-jobrate" type="number">
+      </div>
+
+      <div class="form-group">
+        <label>Lương trung bình</label>
+        <input id="major-salary" type="number">
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel"
+              onclick="closeModal('modal-major')">
+        Hủy
+      </button>
+
+      <button class="btn-save"
+              onclick="saveMajor()">
+        Lưu ngành
+      </button>
+    </div>
+
   </div>
 </div>
 

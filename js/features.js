@@ -9,6 +9,11 @@ function renderSuggest() {
   const toan = parseFloat(document.getElementById('s-toan')?.value) || 0;
   const ly   = parseFloat(document.getElementById('s-ly')?.value)   || 0;
   const anh  = parseFloat(document.getElementById('s-anh')?.value)  || 0;
+  const hoa  = parseFloat(document.getElementById('s-hoa')?.value) || 0;
+const sinh = parseFloat(document.getElementById('s-sinh')?.value) || 0;
+const van  = parseFloat(document.getElementById('s-van')?.value) || 0;
+const su   = parseFloat(document.getElementById('s-su')?.value) || 0;
+const dia  = parseFloat(document.getElementById('s-dia')?.value) || 0;
 
   const hasScores = toan > 0 || ly > 0 || anh > 0;
 
@@ -17,20 +22,444 @@ function renderSuggest() {
 
   if (!hasScores) return;
 
-  // Tính điểm trung bình tổ hợp A00 (Toán + Lý + Anh) thang 30
-  const avg = ((toan + ly + anh) * 10 / 3).toFixed(1);
-  document.getElementById('avg-score').textContent = avg;
+  // Tính điểm trung bình tổ hợp thang 30
+  let avg = 0;
+  let selectedBlock = "A00";
 
-  // Lọc trường có ngành đạt được với điểm hiện tại (± 2 điểm)
-  const suitable = schools
-    .filter(s => s.majors.some(m => m.score <= parseFloat(avg) + 2))
-    .sort((a, b) => a.rank - b.rank)
-    .slice(0, 6);
+  const selectedTags =
+      [...document.querySelectorAll(
+          "#interest-tags .tag.selected"
+      )]
+      .map(x => x.textContent.trim());
 
-  document.getElementById('suggest-list').innerHTML = suitable.length
-    ? suitable.map((s, i) => schoolCardHTML(s, i)).join('')
-    : '<p style="padding:20px; color:var(--text-secondary);">Không có trường phù hợp. Hãy cố gắng hơn!</p>';
+  if (
+      selectedTags.includes("Y dược")
+  ) {
+
+      avg = toan + hoa + sinh;
+      selectedBlock = "B00";
+
+  }
+  else if (
+      selectedTags.includes("Kinh tế") ||
+      selectedTags.includes("Tài chính - Ngân hàng") ||
+      selectedTags.includes("Quản trị kinh doanh")
+  ) {
+
+      avg = toan + van + anh;
+      selectedBlock = "D01";
+
+  }
+  else if (
+      selectedTags.includes("Luật") ||
+      selectedTags.includes("Báo chí - Truyền thông")
+  ) {
+
+      avg = van + su + dia;
+      selectedBlock = "C00";
+
+  }
+  else {
+
+      avg = toan + ly + anh;
+      selectedBlock = "A01";
+
+  }
+
+  avg = avg.toFixed(1);
+
+  document.getElementById(
+      "avg-score"
+).textContent = avg;
+  document.getElementById(
+      "selected-block"
+  ).textContent = selectedBlock;
+
+let aiComment = "";
+
+if (selectedTags.includes("Y dược")) {
+
+    aiComment =
+        parseFloat(avg) >= 28
+            ? "Bạn có khả năng cạnh tranh ở nhóm ngành Y Dược top đầu như Đại học Y Hà Nội, Đại học Dược Hà Nội."
+
+        : parseFloat(avg) >= 25
+            ? "Bạn có nhiều cơ hội ở các ngành Dược học, Điều dưỡng, Y tế công cộng."
+
+        : "Bạn nên cân nhắc thêm các lựa chọn an toàn trong khối ngành sức khỏe.";
+
 }
+
+else {
+
+    aiComment =
+        parseFloat(avg) >= 28
+            ? "Bạn có nhiều cơ hội ở nhóm ngành yêu thích và các trường chất lượng cao."
+
+        : parseFloat(avg) >= 24
+            ? "Bạn có khả năng cạnh tranh ở nhiều ngành phù hợp với sở thích của mình."
+
+        : "Bạn nên bổ sung thêm một số lựa chọn an toàn để tăng cơ hội trúng tuyển.";
+
+}
+    document.getElementById(
+      'suggest-ai-comment'
+  ).textContent = aiComment;
+  // Lọc trường có ngành đạt được với điểm hiện tại (± 2 điểm)
+  const selectedInterests =
+    [...document.querySelectorAll(
+        "#interest-tags .tag.selected"
+    )]
+    .map(x => x.textContent.trim());
+
+const interestKeywords = {
+
+    "Công nghệ thông tin": [
+
+    "công nghệ thông tin",
+    "khoa học máy tính",
+    "khoa học dữ liệu",
+    "kỹ thuật dữ liệu",
+
+    "trí tuệ nhân tạo",
+    "aiot",
+
+    "hệ thống thông tin",
+    "mạng máy tính",
+
+    "an toàn thông tin",
+
+    "phần mềm",
+
+    "internet vạn vật",
+    "iot",
+
+    "đa phương tiện",
+
+    "game",
+
+    "thương mại điện tử"
+],
+
+    "Kinh tế": [
+
+    "kinh tế",
+
+    "kinh doanh",
+
+    "marketing",
+
+    "logistics",
+
+    "kế toán",
+
+    "kiểm toán",
+
+    "tài chính",
+
+    "ngân hàng",
+
+    "thương mại điện tử"
+],
+
+    "Y dược": [
+
+    "y khoa",
+
+    "y học",
+
+    "dược",
+
+    "điều dưỡng",
+
+    "răng hàm mặt",
+
+    "xét nghiệm",
+
+    "y sinh",
+
+    "sức khỏe",
+
+    "bệnh viện",
+
+    "y tế công cộng"
+],
+
+    "Kỹ thuật": [
+
+    "kỹ thuật",
+
+    "cơ khí",
+
+    "cơ điện tử",
+
+    "điện",
+
+    "điện tử",
+
+    "viễn thông",
+
+    "tự động hóa",
+
+    "ô tô",
+
+    "xây dựng",
+
+    "hạ tầng",
+
+    "robot"
+],
+
+    "Luật": [
+        "luật"
+    ],
+
+    "Sư phạm": [
+        "sư phạm",
+        "giáo dục"
+    ],
+
+    "Ngoại ngữ": [
+
+    "ngôn ngữ",
+
+    "anh",
+
+    "trung",
+
+    "nhật",
+
+    "hàn",
+
+    "đông phương"
+],
+    "Nghệ thuật": [
+
+    "thiết kế",
+
+    "mỹ thuật",
+
+    "thời trang",
+
+    "nội thất",
+
+    "đồ họa",
+
+    "đa phương tiện",
+
+    "truyền thông",
+
+    "báo chí",
+
+    "quan hệ công chúng",
+
+    "nghệ thuật"
+],
+
+    "Nông nghiệp": [
+
+    "nông",
+
+    "lâm",
+
+    "thủy",
+
+    "sinh học",
+
+    "môi trường",
+
+    "tài nguyên",
+
+    "đất đai",
+
+    "khí tượng",
+
+    "thủy văn"
+],
+
+    "Kiến trúc": [
+
+    "kiến trúc",
+
+    "quy hoạch",
+
+    "nội thất",
+
+    "xây dựng",
+    "thiết kế"
+],
+
+    "Báo chí - Truyền thông": [
+
+    "báo chí",
+
+    "truyền thông",
+
+    "đa phương tiện",
+
+    "quan hệ công chúng"
+],
+
+    "Quản trị kinh doanh": [
+        "quản trị kinh doanh",
+        "marketing",
+        "logistics"
+    ],
+
+    "Tài chính - Ngân hàng": [
+        "tài chính",
+        "ngân hàng",
+        "kiểm toán",
+        "kế toán"
+    ]
+};
+  
+  const suitableMajors = [];
+
+schools.forEach(school => {
+
+    school.majors.forEach(major => {
+
+        const diemChuan =
+            parseFloat(major.diem_chuan);
+
+        if (isNaN(diemChuan)) return;
+
+        if (diemChuan <= parseFloat(avg) + 2) {
+            let interestScore = 0;
+
+const tenNganh =
+    (major.ten_nganh || "")
+    .toLowerCase();
+
+for (const interest of selectedInterests) {
+
+    const keywords =
+        interestKeywords[interest] || [];
+
+    if (
+        keywords.some(
+            k => tenNganh.includes(
+                k.toLowerCase()
+            )
+        )
+    ) {
+        interestScore += 50;
+    }
+}
+            suitableMajors.push({
+
+    schoolName:
+        school.name,
+
+    schoolCode:
+        school.code,
+
+    schoolRank:
+        school.rank,
+
+    majorName:
+        major.ten_nganh,
+
+    diemChuan:
+        diemChuan,
+
+    diff:
+      Math.abs(
+          parseFloat(avg) - diemChuan
+      ),
+
+  interestScore:
+      interestScore
+
+});
+        }
+    });
+
+});
+
+suitableMajors.sort((a, b) => {
+
+    const scoreA =
+        a.interestScore
+        - a.diff * 10
+        + (100 - a.schoolRank);
+
+    const scoreB =
+        b.interestScore
+        - b.diff * 10
+        + (100 - b.schoolRank);
+
+    return scoreB - scoreA;
+
+});
+
+document.getElementById(
+    'suggest-ai-comment'
+).innerHTML = aiComment;
+
+document.getElementById('suggest-list').innerHTML =
+    suitableMajors.length
+
+    ? suitableMajors.slice(0, 10).map(item => `
+
+        <div class="card"
+             style="padding:16px; margin-bottom:12px;">
+
+            <h4 style="margin-bottom:8px;">
+                ${item.majorName}
+            </h4>
+
+            <div>
+                Trường:
+                <b>${item.schoolName}</b>
+            </div>
+
+            <div>
+                Mã trường:
+                ${item.schoolCode}
+            </div>
+
+            <div>
+    Điểm chuẩn:
+    <b>${item.diemChuan}</b>
+</div>
+
+<div>
+    Chênh lệch:
+    <b>
+        ${(parseFloat(avg) - item.diemChuan).toFixed(1)}
+    </b>
+</div>
+
+<div>
+    Cơ hội:
+    <b>
+        ${
+            parseFloat(avg) - item.diemChuan >= 1
+            ? '✓ Cao'
+
+            : parseFloat(avg) - item.diemChuan >= -1
+            ? '≈ Cân nhắc'
+
+            : '✗ Thấp'
+        }
+    </b>
+</div>
+
+        </div>
+
+    `).join('')
+
+    : `
+        <p style="
+            padding:20px;
+            color:var(--text-secondary);
+        ">
+            Không có ngành phù hợp.
+        </p>
+    `;
+    }
 
 /* ---------- SO SÁNH TRƯỜNG ---------- */
 
