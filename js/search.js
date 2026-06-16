@@ -75,12 +75,20 @@ const feeMax =
 console.log("MAJORS =", majors);
 
   const majorsHTML = majors.map(m => `
-    <tr>
-      <td>${m.ten_nganh}</td>
-      <td><span class="code-badge">${m.ma_nganh}</span></td>
-      <td><span class="code-badge">${m.to_hop}</span></td>
-      <td class="score-val">${m.diem_chuan}</td>
-    </tr>
+<tr>
+  <td>${m.ten_nganh}</td>
+  <td>${m.ma_nganh}</td>
+  <td>${m.to_hop}</td>
+  <td>${m.diem_chuan}</td>
+
+  <td>
+    <button
+      class="btn-outline"
+      onclick="showMajorDetail(${m.id_nganh})">
+      Chi tiết
+    </button>
+  </td>
+</tr>
 `).join('');
 
   document.getElementById('detail-content').innerHTML = `
@@ -173,7 +181,7 @@ console.log("MAJORS =", majors);
         <table>
           <thead>
             <tr>
-              <th>Ngành</th><th>Mã ngành</th><th>Tổ hợp</th><th>Điểm chuẩn</th>
+              <th>Ngành</th><th>Mã ngành</th><th>Tổ hợp</th><th>Điểm chuẩn</th><th>Chi tiết</th>
             </tr>
           </thead>
           <tbody>${majorsHTML}</tbody>
@@ -231,4 +239,60 @@ function renderSaved() {
     listEl.style.display  = 'grid';
     listEl.innerHTML = list.map((s, i) => schoolCardHTML(s, i)).join('');
   }
+}
+
+function showMajorDetail(id) {
+
+  let major = null;
+
+  for (const school of schools) {
+
+    major = school.majors?.find(
+      m => m.id_nganh == id
+    );
+
+    if (major) break;
+  }
+
+  if (!major) return;
+
+  document.getElementById('detail-major-name').value =
+    major.ten_nganh || '';
+
+  document.getElementById('detail-major-code').value =
+    major.ma_nganh || '';
+
+  document.getElementById('detail-major-hedao').value =
+    major.he_dao_tao || '';
+
+  document.getElementById('detail-major-year').value =
+    major.nam || '';
+
+  document.getElementById('detail-major-combo').value =
+    major.to_hop || '';
+
+  document.getElementById('detail-major-score').value =
+    major.diem_chuan || '';
+
+  document.getElementById('detail-major-fee').value =
+    major.hoc_phi || '';
+
+  document.getElementById('detail-major-quota').value =
+    major.chi_tieu || '';
+
+  document.getElementById('detail-major-method').value =
+    major.phuong_thuc || '';
+
+  document.getElementById('detail-major-scale').value =
+    major.thang_diem || '';
+
+  document.getElementById('detail-major-jobrate').value =
+    major.ty_le_viec_lam || '';
+
+  document.getElementById('detail-major-salary').value =
+    major.luong_trung_binh || '';
+
+  document
+  .getElementById('modal-major-detail')
+  .classList.add('open');
 }

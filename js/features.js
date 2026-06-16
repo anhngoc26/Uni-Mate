@@ -507,23 +507,58 @@ function renderCompare() {
     ['Xếp hạng',              s => `<span style="color:var(--primary);font-weight:700">🏆 #${s.rank}</span>`],
     ['Học phí (triệu/năm)',   s => `📋 ${s.feeMin} – ${s.feeMax}`],
     ['Số ngành',              s => `📖 ${s.majors.length} ngành`],
-    ['Điểm chuẩn thấp nhất',
+    ['Điểm chuẩn',
  s => {
    const scores = s.majors
      .map(m => parseFloat(m.score || m.diem_chuan))
      .filter(x => !isNaN(x));
 
-   return `<b>${scores.length ? Math.min(...scores) : '—'}</b>`;
- }],
+   if (!scores.length) return '—';
 
-['Điểm chuẩn cao nhất',
+   return `<b>${Math.min(...scores)} - ${Math.max(...scores)}</b>`;
+ }],
+  ['Chỉ tiêu',
  s => {
-   const scores = s.majors
-     .map(m => parseFloat(m.score || m.diem_chuan))
+
+   const quotas = s.majors
+     .map(m => parseInt(m.chi_tieu))
      .filter(x => !isNaN(x));
 
-   return `<b>${scores.length ? Math.max(...scores) : '—'}</b>`;
+   if (!quotas.length) return '—';
+
+   return `<b>${Math.min(...quotas)} - ${Math.max(...quotas)}</b>`;
  }],
+  ['Tỷ lệ việc làm',
+ s => {
+
+   const rates = s.majors
+     .map(m => parseFloat(m.ty_le_viec_lam))
+     .filter(x => !isNaN(x));
+
+   if (!rates.length) return '—';
+
+   return `<b>${Math.min(...rates)}% - ${Math.max(...rates)}%</b>`;
+ }],
+  ['Lương trung bình',
+ s => {
+
+   const salaries = s.majors
+     .map(m => parseInt(m.luong_trung_binh))
+     .filter(x => !isNaN(x) && x > 0);
+
+   if (!salaries.length) return '—';
+
+   const min = Math.min(...salaries);
+   const max = Math.max(...salaries);
+
+   return `<b>
+      ${(min/1000000).toFixed(0)}
+      -
+      ${(max/1000000).toFixed(0)}
+      triệu
+   </b>`;
+ }],
+  
   ];
 
   const rowsHTML = rows.map(([label, fn]) => `
